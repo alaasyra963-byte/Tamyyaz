@@ -3,6 +3,7 @@ import { formatBytes, formatDate } from "../js/format.js";
 
 const API_BASE = "https://api.github.com";
 const TOKEN_KEY = "tamyyaz_admin_token";
+const MAX_FILE_BYTES = 100 * 1024 * 1024; // GitHub Contents API ceiling
 const repoFullName = `${githubConfig.owner}/${githubConfig.repo}`;
 
 const loginView = document.getElementById("login-view");
@@ -119,6 +120,17 @@ function encodeBase64(str) {
   return btoa(binary);
 }
 
+async function fileToBase64(file) {
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunkSize = 0x8000; // avoid call-stack blowups from spreading huge arrays
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
+
 async function fetchManifest() {
   const res = await fetch(`${API_BASE}/repos/${repoFullName}/contents/releases.json`, {
     headers: ghHeaders(getToken()),
@@ -143,16 +155,23 @@ async function writeManifest(releases, sha, message) {
   if (!res.ok) throw new Error("تعذّر تحديث releases.json.");
 }
 
-// --- upload (create GitHub Release + attach the APK + update manifest) ---
+// --- upload: commit the APK straight into the repo via the Contents API ---
+//
+// GitHub Releases' asset-upload endpoint (uploads.github.com) doesn't send
+// CORS headers, so a browser can't POST a file to it directly — every such
+// request fails as an opaque network error, no matter the token or repo.
+// api.github.com (Contents API, used here and for releases.json above) does
+// support CORS, so the APK is committed as a normal repo file under
+// releases/ instead, and GitHub Pages serves it like any other static file.
 
-function uploadAssetWithProgress(uploadUrl, file, token, onProgress) {
+function putFileWithProgress(path, base64Content, message, token, onProgress) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", uploadUrl);
+    xhr.open("PUT", `${API_BASE}/repos/${repoFullName}/contents/${path}`);
     xhr.setRequestHeader("Authorization", `Bearer ${token}`);
     xhr.setRequestHeader("Accept", "application/vnd.github+json");
     xhr.setRequestHeader("X-GitHub-Api-Version", "2022-11-28");
-    xhr.setRequestHeader("Content-Type", "application/vnd.android.package-archive");
+    xhr.setRequestHeader("Content-Type", "application/json");
     xhr.upload.addEventListener("progress", (e) => {
       if (e.lengthComputable) onProgress((e.loaded / e.total) * 100);
     });
@@ -160,11 +179,18 @@ function uploadAssetWithProgress(uploadUrl, file, token, onProgress) {
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve(JSON.parse(xhr.responseText));
       } else {
-        reject(new Error("فشل رفع ملف APK."));
+        let msg = "فشل رفع ملف APK إلى المستودع.";
+        try {
+          const err = JSON.parse(xhr.responseText);
+          if (err.message) msg = err.message;
+        } catch {
+          // keep default msg
+        }
+        reject(new Error(msg));
       }
     };
     xhr.onerror = () => reject(new Error("فشل رفع ملف APK — تحقق من الاتصال."));
-    xhr.send(file);
+    xhr.send(JSON.stringify({ message, content: base64Content }));
   });
 }
 
@@ -181,37 +207,31 @@ uploadForm.addEventListener("submit", async (e) => {
     showUploadStatus("الملف يجب أن يكون بصيغة APK.", false);
     return;
   }
+  if (file.size > MAX_FILE_BYTES) {
+    showUploadStatus("حجم الملف أكبر من 100 ميغابايت (حد GitHub لهذا النوع من الرفع).", false);
+    return;
+  }
 
   uploadBtn.disabled = true;
   uploadProgress.hidden = false;
   progressBar.style.width = "0%";
-  showUploadStatus("جارٍ إنشاء الإصدار على GitHub...", null);
+  showUploadStatus("جارٍ تجهيز الملف...", null);
 
   try {
-    const releaseRes = await fetch(`${API_BASE}/repos/${repoFullName}/releases`, {
-      method: "POST",
-      headers: { ...ghHeaders(token), "Content-Type": "application/json" },
-      body: JSON.stringify({
-        tag_name: `v${version}`,
-        name: version,
-        body: notes || undefined,
-      }),
-    });
-    if (!releaseRes.ok) {
-      const errBody = await releaseRes.json().catch(() => ({}));
-      throw new Error(
-        errBody.errors?.[0]?.code === "already_exists"
-          ? "رقم الإصدار هذا منشور مسبقاً — استخدم رقماً جديداً."
-          : errBody.message || "فشل إنشاء الإصدار على GitHub."
-      );
-    }
-    const release = await releaseRes.json();
+    const base64 = await fileToBase64(file);
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `releases/${Date.now()}-${safeName}`;
 
-    showUploadStatus("جارٍ رفع ملف APK...", null);
-    const uploadUrl = release.upload_url.replace("{?name,label}", `?name=${encodeURIComponent(file.name)}`);
-    const asset = await uploadAssetWithProgress(uploadUrl, file, token, (pct) => {
-      progressBar.style.width = `${pct}%`;
-    });
+    showUploadStatus("جارٍ رفع ملف APK إلى GitHub...", null);
+    const uploadResult = await putFileWithProgress(
+      path,
+      base64,
+      `Publish release ${version}`,
+      token,
+      (pct) => {
+        progressBar.style.width = `${pct}%`;
+      }
+    );
 
     showUploadStatus("جارٍ تحديث قائمة الإصدارات...", null);
     const { sha, releases } = await fetchManifest();
@@ -221,9 +241,9 @@ uploadForm.addEventListener("submit", async (e) => {
       fileName: file.name,
       sizeBytes: file.size,
       uploadedAt: new Date().toISOString(),
-      downloadUrl: asset.browser_download_url,
-      releaseId: release.id,
-      tag: release.tag_name,
+      downloadUrl: path,
+      path,
+      blobSha: uploadResult.content.sha,
     });
     await writeManifest(releases, sha, `Publish release ${version}`);
 
@@ -280,21 +300,25 @@ async function deleteRelease(release) {
   if (!confirm(`حذف الإصدار ${release.version}؟ لا يمكن التراجع عن هذا الإجراء.`)) return;
   const token = getToken();
   try {
-    if (release.releaseId) {
-      await fetch(`${API_BASE}/repos/${repoFullName}/releases/${release.releaseId}`, {
-        method: "DELETE",
-        headers: ghHeaders(token),
-      });
+    if (release.path) {
+      let sha = release.blobSha;
+      if (!sha) {
+        const res = await fetch(`${API_BASE}/repos/${repoFullName}/contents/${release.path}`, {
+          headers: ghHeaders(token),
+        });
+        if (res.ok) sha = (await res.json()).sha;
+      }
+      if (sha) {
+        await fetch(`${API_BASE}/repos/${repoFullName}/contents/${release.path}`, {
+          method: "DELETE",
+          headers: { ...ghHeaders(token), "Content-Type": "application/json" },
+          body: JSON.stringify({ message: `Remove release ${release.version}`, sha }),
+        });
+      }
     }
-    if (release.tag) {
-      await fetch(`${API_BASE}/repos/${repoFullName}/git/refs/tags/${release.tag}`, {
-        method: "DELETE",
-        headers: ghHeaders(token),
-      }).catch(() => {});
-    }
-    const { sha, releases } = await fetchManifest();
-    const updated = releases.filter((r) => r.releaseId !== release.releaseId);
-    await writeManifest(updated, sha, `Remove release ${release.version}`);
+    const { sha: manifestSha, releases } = await fetchManifest();
+    const updated = releases.filter((r) => r.path !== release.path);
+    await writeManifest(updated, manifestSha, `Remove release ${release.version}`);
     loadReleases();
   } catch (err) {
     console.error(err);

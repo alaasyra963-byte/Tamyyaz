@@ -7,9 +7,16 @@ release with the latest one front and center, and a password-protected
 hosting — everything runs on GitHub's free tier:
 
 - **Hosting** → GitHub Pages, serving this repo as-is.
-- **File storage** → GitHub Releases (each version = one release, the APK is
-  its attached asset — the same mechanism most open-source Android apps use
-  to ship APKs outside the Play Store).
+- **File storage** → each APK is committed straight into the repo under
+  `releases/`, via the same GitHub Contents API the admin panel uses for
+  `releases.json` below, then served like any other static file by Pages
+  itself. (GitHub Releases would be the more conventional place for this —
+  it was the first design here — but its asset-upload endpoint
+  (`uploads.github.com`) doesn't send CORS headers, so a browser can't
+  upload to it directly; every attempt fails as an opaque network error.
+  Committing the file is the CORS-friendly equivalent, since it stays on
+  `api.github.com`.) Trade-off: every publish permanently grows the repo —
+  fine for a personal project, but nothing prunes old APKs automatically.
 - **The "database"** → [`releases.json`](releases.json) at the repo root, a
   small manifest the admin panel rewrites on every publish/delete. The
   public page just fetches that file — no backend, no rate limits.
@@ -33,10 +40,10 @@ hosting — everything runs on GitHub's free tier:
    and name.
 4. **Create your admin token**: [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new) →
    "Fine-grained token" → Repository access: **only this one repo** →
-   Permissions → Contents: **Read and write** (this alone covers both
-   Releases and committing `releases.json`). Nothing broader — a
-   fine-grained token scoped to one repo is the whole point: if it ever
-   leaks, the damage is contained to this repo, not your whole account.
+   Permissions → Contents: **Read and write** (this alone covers committing
+   both the APK and `releases.json`). Nothing broader — a fine-grained token
+   scoped to one repo is the whole point: if it ever leaks, the damage is
+   contained to this repo, not your whole account.
 5. Open `/admin`, paste the token in. It's stored only in your browser
    (localStorage if "remember" is checked, sessionStorage otherwise) and
    sent only to `api.github.com` directly from the browser — it never
@@ -90,13 +97,18 @@ Each entry in `releases.json` looks like:
   "fileName": "tamyyaz-1.2.0.apk",
   "sizeBytes": 24117248,
   "uploadedAt": "2026-09-20T18:04:00.000Z",
-  "downloadUrl": "https://github.com/<you>/<repo>/releases/download/v1.2.0/tamyyaz-1.2.0.apk",
-  "releaseId": 123456789,
-  "tag": "v1.2.0"
+  "downloadUrl": "releases/1758392400000-tamyyaz-1.2.0.apk",
+  "path": "releases/1758392400000-tamyyaz-1.2.0.apk",
+  "blobSha": "a1b2c3d4e5f6..."
 }
 ```
 
-The array is kept newest-first (the admin panel prepends on publish), so
-"latest" always means "most recently published," not the highest version
-number — publish in order. Deleting a release removes the GitHub Release,
-its git tag, and its `releases.json` entry.
+`downloadUrl` is a path relative to the site root, so it resolves correctly
+whether the site lives at the domain root or under `/<repo>/`. The array is
+kept newest-first (the admin panel prepends on publish), so "latest" always
+means "most recently published," not the highest version number — publish
+in order. Deleting a release removes the committed APK file (using
+`blobSha`, refetched if missing) and its `releases.json` entry — the file
+still exists in old git history/commits, same as any other git-tracked file
+would, it's just no longer referenced by the manifest or in the current
+tree.
