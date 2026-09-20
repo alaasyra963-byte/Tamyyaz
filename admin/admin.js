@@ -270,6 +270,16 @@ function showUploadStatus(text, success) {
 
 async function loadReleases() {
   const { releases } = await fetchManifest();
+  if (releases.length === 0) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 4;
+    td.className = "empty-row";
+    td.textContent = "ما في إصدارات منشورة بعد — أول رفع رح يظهر هون.";
+    tr.appendChild(td);
+    releaseTbody.replaceChildren(tr);
+    return;
+  }
   releaseTbody.replaceChildren(...releases.map(buildAdminRow));
 }
 

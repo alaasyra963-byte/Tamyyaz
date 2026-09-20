@@ -56,9 +56,26 @@ body {
 }
 
 .logo {
+  display: inline-flex;
+  align-items: center;
   font-size: 24px;
   font-weight: 900;
   color: var(--primary);
+}
+
+.logo-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: #fff;
+  font-size: 15px;
+  font-weight: 900;
+  margin-inline-end: 8px;
+  flex-shrink: 0;
 }
 
 .logo-en {
@@ -73,18 +90,65 @@ main {
   padding-bottom: 60px;
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .state-msg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
   padding: 60px 20px;
   color: var(--text-muted);
   font-size: 16px;
 }
 
+.state-msg[hidden] {
+  display: none;
+}
+
+.state-msg p {
+  margin: 0;
+}
+
+.state-icon {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 14px;
+  opacity: 0.7;
+}
+
 .state-msg.error {
   color: var(--danger);
 }
 
+.spinner {
+  width: 26px;
+  height: 26px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  margin-bottom: 14px;
+  animation: spin 0.8s linear infinite;
+}
+
 .hero-card {
+  position: relative;
+  overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -92,6 +156,15 @@ main {
   padding: 32px 28px;
   text-align: center;
   margin-top: 12px;
+  animation: fadeInUp 0.4s ease both;
+}
+
+.hero-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
 }
 
 .badge {
@@ -133,12 +206,17 @@ main {
   padding: 14px 40px;
   border-radius: 999px;
   text-decoration: none;
-  transition: transform 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
   box-shadow: 0 6px 16px rgba(244, 168, 37, 0.35);
 }
 
 .download-btn:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(244, 168, 37, 0.45);
+}
+
+.download-btn:active {
+  transform: translateY(0);
 }
 
 .hint {
@@ -149,6 +227,7 @@ main {
 
 .releases-section {
   margin-top: 40px;
+  animation: fadeInUp 0.4s ease 0.08s both;
 }
 
 .releases-section h2 {
@@ -200,21 +279,6 @@ tbody tr + tr td {
 }
 
 .link-btn:hover {
-  text-decoration: underline;
-}
-
-.site-footer {
-  text-align: center;
-  padding: 24px 0 40px;
-}
-
-.site-footer a {
-  color: var(--text-muted);
-  font-size: 12px;
-  text-decoration: none;
-}
-
-.site-footer a:hover {
   text-decoration: underline;
 }
 
