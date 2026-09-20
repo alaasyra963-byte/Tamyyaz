@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>تميّز — تحميل التطبيق</title>
+  <meta name="description" content="حمّل أحدث نسخة من تطبيق تميّز مباشرة، مع أرشيف كامل للإصدارات السابقة." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <span class="logo">تميّز <span class="logo-en">TAMYYAZ</span></span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="loading-state" class="state-msg">جارٍ التحميل...</section>
+    <section id="empty-state" class="state-msg" hidden>لا توجد إصدارات منشورة بعد.</section>
+    <section id="error-state" class="state-msg error" hidden>تعذّر تحميل الإصدارات. حاول تحديث الصفحة.</section>
+
+    <section id="latest-release" class="hero-card" hidden>
+      <span class="badge">أحدث إصدار</span>
+      <h1 class="version"></h1>
+      <p class="meta"><span class="date"></span> · <span class="size"></span></p>
+      <p class="notes"></p>
+      <a class="download-btn" href="#">تحميل APK</a>
+      <p class="hint">قد يطلب منك جهازك السماح بتثبيت التطبيقات من مصادر غير معروفة لمرة واحدة.</p>
+    </section>
+
+    <section id="release-list-section" class="releases-section" hidden>
+      <h2>إصدارات سابقة</h2>
+      <div class="table-scroll">
+        <table id="release-list">
+          <thead>
+            <tr>
+              <th>الإصدار</th>
+              <th>التاريخ</th>
+              <th>الحجم</th>
+              <th>ملاحظات</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <a href="admin/">لوحة التحكم</a>
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
