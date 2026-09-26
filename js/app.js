@@ -1,5 +1,18 @@
 import { formatBytes, formatDate } from "./format.js";
 
+const LABELS = {
+  ar: { download: "تحميل", version: "الإصدار" },
+  en: { download: "Download", version: "Version" },
+  fr: { download: "Télécharger", version: "Version" },
+  de: { download: "Herunterladen", version: "Version" },
+  tr: { download: "İndir", version: "Sürüm" },
+};
+
+function currentLabels() {
+  const lang = (document.documentElement.lang || "ar").toLowerCase();
+  return LABELS[lang] || LABELS.en;
+}
+
 function buildRow(release) {
   const tr = document.createElement("tr");
 
@@ -20,7 +33,7 @@ function buildRow(release) {
   const link = document.createElement("a");
   link.href = release.downloadUrl;
   link.className = "link-btn";
-  link.textContent = "تحميل";
+  link.textContent = currentLabels().download;
   downloadTd.appendChild(link);
 
   tr.append(versionTd, dateTd, sizeTd, notesTd, downloadTd);
@@ -48,7 +61,7 @@ async function loadReleases() {
 
     const [latest, ...older] = releases;
 
-    heroEl.querySelector(".version").textContent = `الإصدار ${latest.version}`;
+    heroEl.querySelector(".version").textContent = `${currentLabels().version} ${latest.version}`;
     heroEl.querySelector(".date").textContent = formatDate(latest.uploadedAt);
     heroEl.querySelector(".size").textContent = formatBytes(latest.sizeBytes);
     heroEl.querySelector(".notes").textContent = latest.notes || "";

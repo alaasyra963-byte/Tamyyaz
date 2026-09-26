@@ -25,14 +25,26 @@ server, no database, no paid hosting:
 
 ## Pages
 
-- `index.html` — the download page. Shows the latest release front and
-  center, with an archive of older versions below it.
-- `privacy.html` / `privacy-en.html` — the privacy policy, in Arabic
-  (primary) and English (for Play Store review). Update the placeholder
-  contact email in both files (search for `PRIVACY_EMAIL_PLACEHOLDER`)
-  before publishing.
+- `index.html` — the download page (Arabic, at the site root). Shows the
+  latest release front and center, with an archive of older versions
+  below it. Translated copies: `index-en.html`, `index-fr.html`,
+  `index-de.html`, `index-tr.html`.
+- `privacy.html` — the privacy policy (Arabic, at the site root).
+  Translated copies: `privacy-en.html` (the authoritative version in
+  case translations conflict), `privacy-fr.html`, `privacy-de.html`,
+  `privacy-tr.html`.
+- Every page carries a 5-way language switcher (AR/EN/FR/DE/TR) in the
+  header nav. There's no build step or shared template — each language
+  is its own plain HTML file, so a copy change (wording, contact email,
+  a new section) has to be repeated across all 5 files by hand.
+- `js/format.js` and `js/app.js` pick their date/byte-unit formatting and
+  a couple of UI labels ("Download", "Version") from the page's
+  `<html lang="...">` attribute, so a new release only needs to be
+  published once in `releases.json` — every language page renders it
+  correctly on its own.
 - `admin/` — the release-publishing dashboard (not linked from the public
-  pages, disallowed in `robots.txt`).
+  pages, disallowed in `robots.txt`), Arabic-only since it's an internal
+  tool.
 
 ## One-time setup
 
