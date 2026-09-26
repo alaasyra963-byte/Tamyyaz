@@ -23,7 +23,32 @@ hosting — everything runs on GitHub's free tier:
 - **Admin auth** → a GitHub Personal Access Token, entered once in the
   browser. No separate login system to build or maintain.
 
-## One-time setup
+## Deploying to Firebase Hosting (primary target)
+
+This site is served from **Firebase Hosting** on the same Firebase project as
+the Tamyyaz Android app (`tamyyaz-3a83b`), because most of the app's audience
+is in Syria and Firebase's infrastructure reaches them reliably, unlike many
+third-party static-hosting services. `firebase.json` and `.firebaserc` at the
+repo root already point at that project — see the top-level task summary /
+chat history for the exact `firebase login` / `firebase deploy` commands, or
+just run:
+
+```bash
+npm install -g firebase-tools   # once, if you don't have it
+firebase login
+firebase deploy --only hosting --project tamyyaz-3a83b
+```
+
+Firebase Hosting only serves whatever is in this repo at deploy time — it
+does not watch GitHub for pushes. So after publishing a new release from
+`/admin` (which commits a new APK + `releases.json` to this repo), re-run
+`firebase deploy --only hosting` to make the live site reflect it.
+
+The GitHub Pages workflow below (`.github/workflows/pages.yml`) still runs on
+every push to `main` and can be kept as a secondary mirror, but Firebase
+Hosting is the one meant for real users.
+
+## One-time setup (GitHub Pages mirror, optional)
 
 1. **Create a public GitHub repo** (public is required — Pages and unlimited
    Release storage are free only on public repos). Check "Add a README" when
