@@ -1,5 +1,6 @@
 :root {
   --primary: #8b5cf6;
+  --primary-dark: #5b21b6;
   --primary-light: #a78bfa;
   --accent: #f4a825;
   --bg: #0f0b1a;
@@ -36,6 +37,8 @@ body {
   max-width: 440px;
 }
 
+/* Header */
+
 .site-header {
   padding: 24px 0;
 }
@@ -51,9 +54,9 @@ body {
 .logo {
   display: inline-flex;
   align-items: center;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 900;
-  color: var(--primary);
+  color: var(--text);
   text-decoration: none;
 }
 
@@ -64,10 +67,7 @@ body {
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-light));
-  color: #fff;
-  font-size: 15px;
-  font-weight: 900;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   margin-inline-end: 8px;
   flex-shrink: 0;
 }
@@ -118,7 +118,24 @@ main {
 .tagline {
   color: var(--text-muted);
   font-size: 15px;
-  margin: 0 0 8px;
+  margin: 0 0 16px;
+}
+
+.feature-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 32px;
+}
+
+.feature-chip {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--primary-light);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  padding: 6px 13px;
+  border-radius: 999px;
 }
 
 @keyframes fadeInUp {
@@ -137,6 +154,8 @@ main {
     transform: rotate(360deg);
   }
 }
+
+/* Loading / empty / error states */
 
 .state-msg {
   display: flex;
@@ -177,14 +196,30 @@ main {
   animation: spin 0.8s linear infinite;
 }
 
+/* Icon badge (app mark), used at the top of the hero card */
+
+.icon-badge {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  box-shadow: 0 10px 24px rgba(139, 92, 246, 0.4);
+}
+
+/* Hero card (latest release) */
+
 .hero-card {
   position: relative;
-  overflow: hidden;
+  z-index: 0;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 32px 28px;
+  padding: 36px 28px 32px;
   text-align: center;
   margin-top: 12px;
   animation: fadeInUp 0.4s ease both;
@@ -195,7 +230,21 @@ main {
   position: absolute;
   inset: 0 0 auto 0;
   height: 4px;
+  border-radius: var(--radius) var(--radius) 0 0;
   background: linear-gradient(90deg, var(--primary), var(--accent));
+}
+
+.hero-card::after {
+  content: "";
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  height: 160px;
+  background: radial-gradient(ellipse at center, rgba(139, 92, 246, 0.32), transparent 70%);
+  z-index: -1;
+  pointer-events: none;
 }
 
 .badge {
@@ -256,6 +305,8 @@ main {
   margin: 18px 0 0;
 }
 
+/* Previous releases table */
+
 .releases-section {
   margin-top: 40px;
   animation: fadeInUp 0.4s ease 0.08s both;
@@ -299,6 +350,14 @@ thead th {
   border-bottom: 1px solid var(--border);
 }
 
+tbody tr {
+  transition: background 0.15s ease;
+}
+
+tbody tr:hover {
+  background: var(--surface-alt);
+}
+
 tbody tr + tr td {
   border-top: 1px solid var(--border);
 }
@@ -312,6 +371,8 @@ tbody tr + tr td {
 .link-btn:hover {
   text-decoration: underline;
 }
+
+/* Footer */
 
 .site-footer {
   padding: 32px 0 40px;
@@ -489,7 +550,7 @@ tbody tr + tr td {
   }
 
   .hero-card {
-    padding: 26px 18px;
+    padding: 30px 18px 26px;
   }
 
   .hero-card .version {
