@@ -60,14 +60,10 @@ body {
   text-decoration: none;
 }
 
-.logo-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+.logo-mark-img {
+  height: 30px;
+  width: auto;
+  display: block;
   margin-inline-end: 8px;
   flex-shrink: 0;
 }
@@ -198,16 +194,12 @@ main {
 
 /* Icon badge (app mark), used at the top of the hero card */
 
-.icon-badge {
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 18px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  box-shadow: 0 10px 24px rgba(139, 92, 246, 0.4);
+.hero-logo {
+  display: block;
+  width: 140px;
+  height: auto;
+  margin: 0 auto 18px;
+  filter: drop-shadow(0 10px 20px rgba(139, 92, 246, 0.4));
 }
 
 /* Hero card (latest release) */
